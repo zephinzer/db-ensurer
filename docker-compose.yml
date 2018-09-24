@@ -1,0 +1,38 @@
+version: "3.5"
+networks:
+  db-ensurer:
+    name: db-ensurer
+services:
+  app:
+    build: .
+    container_name: db_ensurer_app
+    entrypoint: ["node", "./index.js"]
+    environment:
+      DB_MAKER_URL: "http://db-maker:3000"  # directs to db-maker
+      DB_HOST: "mysql"                      # refers to mysql service
+      DB_NAME: "database2"                  # create new database, `database2`
+      DB_USER: "database2user"              # 'database2user'@'%' accesses `database2`
+      DB_PASSWORD: password                 # password for 'database2user'
+      DB_ROOT_PASSWORD: password            # refers to MYSQL_ROOT_PASSWORD in mysql service
+      MAX_RETRY: 10                         # retry the schema creation 10 times
+      INTERVAL_RETRY: 2500                  # wait for 2.5 seconds before retries
+    networks:
+    - db-ensurer
+  db-maker:
+    image: zephinzer/db-maker:latest
+    environment:
+      PORT: 3000
+    networks:
+    - db-ensurer
+    ports:
+    - 3000:3000
+  mysql:
+    image: mysql:5.7.23
+    container_name: db_maker_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: database
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    networks:
+    - db-ensurer
